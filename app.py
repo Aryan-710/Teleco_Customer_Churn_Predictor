@@ -53,6 +53,7 @@ with col2:
 # Prediction Logic
 # ---------------------------
 if st.button("🔍 Predict"):
+    # Create input dataframe
     input_data = pd.DataFrame([[
         SeniorCitizen, MonthlyCharges, TotalCharges, gender, Partner, Dependents,
         PhoneService, MultipleLines, InternetService, OnlineSecurity, OnlineBackup,
@@ -66,12 +67,19 @@ if st.button("🔍 Predict"):
         'PaperlessBilling', 'PaymentMethod', 'tenure'
     ])
 
-    # ⚠️ Make sure your model expects categorical variables in this form.
-    # If they were encoded numerically before training, you should encode them here too.
+    # Append to reference dataframe to align columns
+    df_combined = pd.concat([df, input_data], ignore_index=True)
+
+    # Apply same preprocessing used during training
+    df_encoded = pd.get_dummies(df_combined)
+    df_encoded = df_encoded.reindex(columns=model.feature_names_in_, fill_value=0)
+
+    # Get only the last row (user input)
+    input_encoded = df_encoded.tail(1)
 
     # Predict
-    prediction = model.predict(input_data)
-    probability = model.predict_proba(input_data)[:, 1][0] * 100
+    prediction = model.predict(input_encoded)
+    probability = model.predict_proba(input_encoded)[:, 1][0] * 100
 
     # Display results
     st.subheader("🧾 Prediction Result:")
@@ -81,9 +89,3 @@ if st.button("🔍 Predict"):
     else:
         st.success("This customer is **likely to continue** ✅")
         st.write(f"**Confidence:** {probability:.2f}%")
-
-# ---------------------------
-# Footer
-# ---------------------------
-st.markdown("---")
-
